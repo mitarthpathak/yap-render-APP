@@ -1,0 +1,7 @@
+{
+  "name": "Yap Render",
+  "description": "Yap & Render translates spoken language into Indian Sign Language with real-time 3D signing avatar, voice recognition, and fingerspelling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

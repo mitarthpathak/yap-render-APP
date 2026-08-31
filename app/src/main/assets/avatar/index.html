@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Yap &amp; Render 3D Avatar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background-color: #faf8f2; }
+    #avatar-container { width: 100%; height: 100%; display: block; position: relative; }
+    #avatar-container canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; outline: none; }
+
+    /* Lightweight loading shimmer shown until the first avatar frame renders. */
+    #avatar-boot {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: #faf8f2; transition: opacity .45s ease; z-index: 2;
+    }
+    #avatar-boot.hidden { opacity: 0; pointer-events: none; }
+    #avatar-boot .ring {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid rgba(24,24,26,0.12); border-top-color: #df5b3a;
+      animation: avspin .9s linear infinite;
+    }
+    @keyframes avspin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="avatar-container">
+    <div id="avatar-boot"><div class="ring"></div></div>
+  </div>
+
+  <script>
+    // Surface any load/parse/runtime failure to the Android logcat via the
+    // chrome client. Without this a module that fails to parse is silent and
+    // the stage just shows the loading ring forever.
+    window.addEventListener('error', function (e) {
+      var where = e.filename ? (' @ ' + e.filename + ':' + e.lineno) : ''
+      console.log('[avatar] window error: ' + (e.message || e.type) + where)
+    })
+    window.addEventListener('unhandledrejection', function (e) {
+      console.log('[avatar] unhandled rejection: ' + (e.reason && (e.reason.message || e.reason)))
+    })
+    console.log('[avatar] index.html parsed, requesting module')
+  </script>
+
+  <!-- Engine and 3D runtime are bundled as local assets. No network / CDN dependency. -->
+  <script type="module" src="avatar_entry.js"></script>
+  <script type="module">
+    console.log('[avatar] module pipeline reached')
+  </script>
+</body>
+</html>
