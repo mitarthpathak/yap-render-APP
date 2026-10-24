@@ -1,0 +1,11 @@
+/* Android WebView additions on top of the web app's stylesheets. */
+:root {
+  /* next/font sets these on <html> in the web app. */
+  --font-dm-sans: 'DM Sans';
+  --font-dm-serif: 'DM Serif Display';
+}
+html, body { min-height: 100%; -webkit-tap-highlight-color: transparent; overscroll-behavior: none; }
+.sign-mobile-shell { min-height: 100dvh; background: var(--background); }
+/* The native screen has no dock below the stage, so it does not need the web's dock clearance. */
+.sign-mobile-shell .sign-stage { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+.sign-mobile-loading { display: grid; place-items: center; min-height: 100dvh; color: var(--ink-soft); font: 500 .9rem var(--font-dm-sans), Arial, sans-serif; }

@@ -34,6 +34,7 @@ import com.example.ui.viewmodel.InfoModalType
 
 enum class DockTab {
     HOME,
+    SIGN,
     HELP,
     ACCOUNT
 }
@@ -75,6 +76,15 @@ fun BottomFloatingDock(
                     isSelected = currentTab == DockTab.HOME,
                     onClick = { onTabSelected(DockTab.HOME) },
                     testTag = "dock_tab_home"
+                )
+
+                DockItem(
+                    label = "Sign → Text",
+                    iconFilled = Icons.Filled.FrontHand,
+                    iconOutlined = Icons.Outlined.FrontHand,
+                    isSelected = currentTab == DockTab.SIGN,
+                    onClick = { onTabSelected(DockTab.SIGN) },
+                    testTag = "dock_tab_sign"
                 )
 
                 DockItem(

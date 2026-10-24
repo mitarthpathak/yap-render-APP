@@ -27,9 +27,12 @@ This repository holds the **native Android app**, which brings the same speech �
 
 ## ✨ Features
 
-- 🎙️ Real-time speech capture and transcription
-- 🧠 AI-driven context understanding for accurate ISL gloss conversion
-- 🤟 Animated sign interpreter output
+- 🎙️ Real-time speech capture and transcription, with **live mode** that signs while you speak
+- 🧠 Offline ISL gloss engine shared with the web app — English, **Hindi (Devanagari)** and **numbers**
+- 🤟 3D sign interpreter with the web app's re-authored ISL signs (Default and Human avatars)
+- 📷 **Sign → Text camera** ("You Sign. We Speak.") — on-device hand, body and face tracking,
+  word / letter / number recognition, an editable transcript with Speak and sentence cleanup
+- 🏋️ **Training Studio** (letters & numbers, word motions) and **Signer Validation** sessions, stored on the device
 - 📱 Native Android experience — works independent of the web app
 
 ## 🛠️ Tech Stack
@@ -59,6 +62,32 @@ This repository holds the **native Android app**, which brings the same speech �
    GEMINI_API_KEY=your_api_key_here
    ```
 4. Run the app on an emulator or a physical device.
+
+## 🔄 Web features in the app (`web/`)
+
+The avatar engine and the camera Sign → Text app are the web app's own code,
+copied into [`web/src`](web/src) and bundled for the app's WebViews:
+
+| Output | Used by |
+| --- | --- |
+| `app/src/main/assets/avatar/avatar_bundle.js` | `Avatar3DWebView.kt` (speech → sign avatar) |
+| `app/src/main/assets/sign/` (bundle, trained models, MediaPipe runtime) | `SignCameraWebView.kt` (Sign → Text dock tab) |
+
+The bundles are committed, so Android Studio needs no Node.js. To pull newer web changes:
+
+```bash
+cd web
+npm install
+npm run sync -- ../../yap-render   # path to a yap-render checkout; copies source + models
+npm run build                      # rebuilds the bundles into app/src/main/assets
+npm run typecheck
+```
+
+`web/UPSTREAM_COMMIT` records the web commit the app was synced from. App-specific
+glue lives in [`web/mobile`](web/mobile): the WebView entry points, a `next/link`
+stand-in, and bridges to Android text-to-speech and (when `GEMINI_API_KEY` is set
+in `.env`) Gemini sentence cleanup. Camera video is processed on the device and is
+never uploaded.
 
 ## 🏆 Built For
 

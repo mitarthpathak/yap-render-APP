@@ -43,8 +43,8 @@
     console.log('[avatar] index.html parsed, requesting module')
   </script>
 
-  <!-- Engine and 3D runtime are bundled as local assets. No network / CDN dependency. -->
-  <script type="module" src="avatar_entry.js"></script>
+  <!-- Engine, sign tables and three.js, bundled from web/ by `npm run build`. No network / CDN dependency. -->
+  <script type="module" src="avatar_bundle.js"></script>
   <script type="module">
     console.log('[avatar] module pipeline reached')
   </script>

@@ -50,6 +50,9 @@ android {
     compose = true
     buildConfig = true
   }
+  // Sign recognition models and the MediaPipe runtime are streamed from assets;
+  // stored uncompressed they open without inflating tens of megabytes first.
+  androidResources { noCompress += listOf("task", "wasm", "bin", "glb") }
   testOptions { unitTests { isIncludeAndroidResources = true } }
   dependenciesInfo {
     includeInApk = false
