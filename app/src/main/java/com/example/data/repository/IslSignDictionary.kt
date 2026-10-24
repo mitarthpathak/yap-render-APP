@@ -492,7 +492,8 @@ object IslSignDictionary {
 
     val QUICK_SUGGESTION_WORDS = listOf(
         "YOU", "HOME", "TIME", "PERSON", "HELLO", "HELP",
-        "THANK YOU", "YES", "NO", "PLEASE", "FRIEND", "LOVE"
+        "THANK YOU", "YES", "NO", "PLEASE", "FRIEND", "LOVE",
+        "GOOD MORNING", "MY NAME", "MEET"
     )
 
     // Fingerspelling pose generator for A-Z

@@ -358,7 +358,8 @@ private fun AssignedVocabularyMatrix(
                 "DRINK", "EAT", "WATER", "HELP", "THANK YOU",
                 "YES", "NO", "PLEASE", "SORRY", "WELCOME",
                 "GOOD", "BAD", "STOP", "WAIT", "COME", "GO",
-                "WANT", "NEED", "LIKE", "KNOW", "UNDERSTAND", "ASK"
+                "WANT", "NEED", "LIKE", "KNOW", "UNDERSTAND", "ASK",
+                "I", "MY", "YOUR", "NAME", "LOVE", "MEET", "MORNING", "FRIEND"
             )
 
             // Flow row simulation using chunked rows

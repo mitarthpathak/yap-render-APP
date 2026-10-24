@@ -49,7 +49,10 @@ fun Avatar3DWebView(
     replayTrigger: Long,
     speed: Float,
     onAvatarStateChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    liveTranscript: String = "",
+    liveIsFinal: Boolean = false,
+    liveTrigger: Long = 0L
 ) {
     val context = LocalContext.current
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
@@ -79,8 +82,8 @@ fun Avatar3DWebView(
     // Handle play triggers
     LaunchedEffect(playTrigger) {
         if (playTrigger > 0 && isLoaded) {
-            val clean = phraseToPlay.replace("'", "\\'").replace("\n", " ").trim()
-            webViewRef?.evaluateJavascript("window.playPhrase && window.playPhrase('$clean')", null)
+            val phrase = org.json.JSONObject.quote(phraseToPlay.replace("\n", " ").trim())
+            webViewRef?.evaluateJavascript("window.playPhrase && window.playPhrase($phrase)", null)
         }
     }
 
@@ -88,6 +91,15 @@ fun Avatar3DWebView(
     LaunchedEffect(stopTrigger) {
         if (stopTrigger > 0 && isLoaded) {
             webViewRef?.evaluateJavascript("window.stopAnimation && window.stopAnimation()", null)
+        }
+    }
+
+    // Live speech: forward each recognizer hypothesis; the engine signs only
+    // the words that are new and stable (web lib/live-speech.ts rules).
+    LaunchedEffect(liveTrigger) {
+        if (liveTrigger > 0 && isLoaded) {
+            val text = org.json.JSONObject.quote(liveTranscript.replace("\n", " "))
+            webViewRef?.evaluateJavascript("window.liveSpeech && window.liveSpeech($text, $liveIsFinal)", null)
         }
     }
 

@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 
 enum class AppScreenState {
     HOME,
+    SIGN,
     ACCOUNT
 }
 
@@ -181,7 +182,7 @@ fun YapRenderApp(viewModel: YapRenderViewModel, authViewModel: AuthViewModel) {
             AnimatedContent(
                 targetState = currentScreen,
                 transitionSpec = {
-                    val forward = targetState == AppScreenState.ACCOUNT
+                    val forward = targetState != AppScreenState.HOME
                     val dir = if (forward) 1 else -1
                     (slideInHorizontally(tween(320)) { w -> dir * w / 3 } + fadeIn(tween(240)))
                         .togetherWith(
@@ -191,6 +192,16 @@ fun YapRenderApp(viewModel: YapRenderViewModel, authViewModel: AuthViewModel) {
                 label = "screen_transition"
             ) { screen ->
             when (screen) {
+                AppScreenState.SIGN -> {
+                    // Camera Sign → Text, the web app's "You Sign. We Speak." stage.
+                    SignCameraWebView(
+                        onClose = {
+                            currentScreen = AppScreenState.HOME
+                            currentDockTab = DockTab.HOME
+                        }
+                    )
+                }
+
                 AppScreenState.ACCOUNT -> {
                     AccountScreen(
                         account = account,
@@ -326,8 +337,9 @@ fun YapRenderApp(viewModel: YapRenderViewModel, authViewModel: AuthViewModel) {
             }
             }
 
-            // Floating Bottom Dock positioned just above navigation bar
-            BottomFloatingDock(
+            // Floating Bottom Dock positioned just above navigation bar.
+            // The camera stage is full screen with its own close button.
+            if (currentScreen != AppScreenState.SIGN) BottomFloatingDock(
                 currentTab = currentDockTab,
                 onTabSelected = { tab ->
                     currentDockTab = tab
@@ -337,6 +349,9 @@ fun YapRenderApp(viewModel: YapRenderViewModel, authViewModel: AuthViewModel) {
                             coroutineScope.launch {
                                 scrollState.animateScrollTo(0)
                             }
+                        }
+                        DockTab.SIGN -> {
+                            currentScreen = AppScreenState.SIGN
                         }
                         DockTab.HELP -> {
                             viewModel.openModal(InfoModalType.HELP_GUIDE)

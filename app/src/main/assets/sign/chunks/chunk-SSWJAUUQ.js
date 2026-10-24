@@ -1,0 +1,1 @@
+async function a(e,t,o,n=3e4){let r=new AbortController,i=setTimeout(()=>r.abort(),n);try{return await t(await fetch(e,{cache:"no-store",signal:r.signal}))}catch(s){throw r.signal.aborted?new Error(o):s}finally{clearTimeout(i)}}export{a};

@@ -220,7 +220,10 @@ fun AvatarStudioWidget(
                         replayTrigger = uiState.replayTrigger,
                         speed = uiState.speed,
                         onAvatarStateChange = onAvatarStateChange,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        liveTranscript = uiState.liveTranscript,
+                        liveIsFinal = uiState.liveIsFinal,
+                        liveTrigger = uiState.liveTrigger
                     )
 
                     // Bottom-Right Avatar Switch: AVATAR [ Default ] [ Human ]

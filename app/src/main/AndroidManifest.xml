@@ -4,6 +4,17 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Camera Sign → Text: video is processed on the device and never uploaded. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
+    <!-- Device text-to-speech for the Sign → Text transcript's Speak button (Android 11+ visibility). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"

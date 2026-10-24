@@ -35,7 +35,11 @@ data class YapRenderUiState(
     val isLiveListening: Boolean = false,
     val isListeningVoice: Boolean = false,
     val isFullscreen: Boolean = false,
-    val activeInfoModal: InfoModalType? = null
+    val activeInfoModal: InfoModalType? = null,
+    // Live speech hypotheses streamed to the 3D avatar (see Avatar3DWebView).
+    val liveTranscript: String = "",
+    val liveIsFinal: Boolean = false,
+    val liveTrigger: Long = 0L
 )
 
 enum class InfoModalType {
@@ -55,6 +59,8 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
 
     private var playbackJob: Job? = null
     private var speechRecognizer: SpeechRecognizer? = null
+    private var liveRestartJob: Job? = null
+    private var liveFailures = 0
 
     /** Set by the host so each played phrase is logged to the signed-in account. */
     var onPhrasePlayed: ((String) -> Unit)? = null
@@ -84,9 +90,20 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
                                     statusText = "Voice ready — tap Voice to speak"
                                 )
                             }
+                            if (_uiState.value.isLiveListening) onLiveSessionEnded(error)
                         }
                         override fun onResults(results: Bundle?) {
                             val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                            if (_uiState.value.isLiveListening) {
+                                val heard = matches?.firstOrNull().orEmpty()
+                                if (heard.isNotBlank()) {
+                                    sendLive(heard, isFinal = true)
+                                    onPhrasePlayed?.invoke(heard.uppercase(Locale.getDefault()))
+                                }
+                                _uiState.update { it.copy(isListeningVoice = false) }
+                                onLiveSessionEnded(null)
+                                return
+                            }
                             if (!matches.isNullOrEmpty()) {
                                 val spoken = matches[0].uppercase(Locale.getDefault())
                                 onInputTextChanged(spoken)
@@ -99,6 +116,7 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
                             if (!matches.isNullOrEmpty()) {
                                 val partial = matches[0].uppercase(Locale.getDefault())
                                 _uiState.update { it.copy(inputText = partial) }
+                                if (_uiState.value.isLiveListening) sendLive(matches[0], isFinal = false)
                             }
                         }
                         override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -142,10 +160,49 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
                 statusText = if (newLive) "● Live translation mode active" else "ready — words or A-Z fingerspelling"
             )
         }
+        liveRestartJob?.cancel()
+        liveFailures = 0
         if (newLive) {
+            sendLive("", isFinal = true) // forget words held from an earlier live run
             startVoiceListening()
         } else {
-            stopVoiceListening()
+            // Cancel rather than stop: a final result arriving now must not replay the phrase.
+            runCatching { speechRecognizer?.cancel() }
+            _uiState.update { it.copy(isListeningVoice = false) }
+        }
+    }
+
+    /** Streams one recognizer hypothesis; the avatar signs only the new, stable words. */
+    private fun sendLive(transcript: String, isFinal: Boolean) {
+        _uiState.update {
+            it.copy(liveTranscript = transcript, liveIsFinal = isFinal, liveTrigger = System.nanoTime())
+        }
+    }
+
+    /**
+     * Android ends a recognition session after each utterance or a stretch of
+     * silence. Live mode keeps listening, as the web app's auto-restarted live
+     * run does, and stops only on errors a retry cannot fix.
+     */
+    private fun onLiveSessionEnded(error: Int?) {
+        val silence = error == null || error == SpeechRecognizer.ERROR_NO_MATCH ||
+            error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+        liveFailures = if (silence) 0 else liveFailures + 1
+        val fatal = error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS || liveFailures > MAX_LIVE_RETRIES
+        if (fatal) {
+            _uiState.update {
+                it.copy(
+                    isLiveListening = false,
+                    statusText = if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) "Microphone permission needed for live mode"
+                    else "Live mode stopped — speech recognition unavailable"
+                )
+            }
+            return
+        }
+        liveRestartJob?.cancel()
+        liveRestartJob = viewModelScope.launch {
+            delay(if (silence) 150L else 600L)
+            if (_uiState.value.isLiveListening) startVoiceListening()
         }
     }
 
@@ -155,6 +212,7 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
                 putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to translate into ISL")
+                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             }
             _uiState.update { it.copy(isListeningVoice = true, statusText = "Listening for speech...") }
             speechRecognizer?.startListening(intent)
@@ -336,6 +394,10 @@ class YapRenderViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun lerp(start: Float, end: Float, fraction: Float): Float {
         return start + (end - start) * fraction
+    }
+
+    private companion object {
+        const val MAX_LIVE_RETRIES = 3
     }
 
     override fun onCleared() {
